@@ -109,16 +109,10 @@ class Agent():
         episode_reward_list = []
         episode_count_list = []
         episode_count = 0
-        average_value = []
-        average_expected_value = []
-        step_list = []
         
         # Training Loop
         while self.total_steps < self.max_train_steps:
-            s = self.env.reset()[0]     
-            episode_state = []
-            episode_action = []
-            episode_reward = []
+            s = self.env.reset()[0]    
             while True:
                 a = self.choose_action(s)
                 s_, r, done , truncated , _ = self.env.step(a)
@@ -127,10 +121,6 @@ class Agent():
 
                 # storage data
                 self.replay_buffer.store(s, a, [r], s_, done)
-                episode_state.append(s)
-                episode_action.append(a)
-                episode_reward.append(r)
-                
                 # update state
                 s = s_
 
@@ -155,35 +145,7 @@ class Agent():
                 self.total_steps += 1
                 if done or truncated:
                     break
-            # Calculate Q Value And MC-Error
-            with torch.no_grad():
-                episode_state = torch.tensor(np.array(episode_state))
-                episode_action = torch.tensor(np.array(episode_action))
-
-                value = self.critic1(episode_state,episode_action)
-                average_value.append(value.mean().numpy())
-            expected_value = []
-            delta = 0
-            for i in range(len(episode_reward)):
-                r = episode_reward[i]
-                delta = r + self.gamma * delta
-                expected_value.insert(0 , delta)
-            average_expected_value.append(np.mean(expected_value))
-            step_list.append(self.total_steps)
-                
-
-            episode_count += 1
-        
-        plt.plot(step_list ,average_value , label="Q_value")
-        plt.plot(step_list ,average_expected_value , label="MC-Error")
-        plt.xlabel("Step")
-        plt.ylabel("Expected reward")
-        plt.legend()
-        plt.title("Training Curve")
-        plt.show()
-
-        plt.savefig("Expected_reward_%d.png"%(episode_count))
-        plt.clf()
+            
         
         # Plot the training curve
         plt.plot(episode_count_list, episode_reward_list)

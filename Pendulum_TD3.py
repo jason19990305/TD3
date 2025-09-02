@@ -53,8 +53,8 @@ if __name__ == '__main__':
     parser.add_argument("--sigma", type=float, default=0.2, help="Sigma for target action noise")
     parser.add_argument("--mem_min", type=float, default=100, help="minimum size of replay memory before updating actor-critic.")
 
-    parser.add_argument("--batch_size", type=int, default=100, help="Batch size")
-    parser.add_argument("--buffer_size", type=int, default=int(10000), help="Learning rate of actor")
+    parser.add_argument("--mini_batch_size", type=int, default=100, help="Mini-Batch size")
+    parser.add_argument("--buffer_size", type=int, default=int(10e6), help="Learning rate of actor")
     parser.add_argument("--max_train_steps", type=int, default=int(6e4), help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq_steps", type=float, default=5e3, help="Evaluate the policy every 'evaluate_freq_steps' steps")
     args = parser.parse_args()

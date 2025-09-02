@@ -8,6 +8,7 @@ import torch
 class ReplayBuffer:
     def __init__(self, args):
         self.max_length = args.buffer_size
+        self.mini_batch_size = args.mini_batch_size
         self.s = deque(maxlen = self.max_length)
         self.a = deque(maxlen = self.max_length)
         self.r = deque(maxlen = self.max_length)
@@ -24,6 +25,14 @@ class ReplayBuffer:
         self.done.append([done])
         if self.count <= self.max_length:
             self.count += 1
+    def sample_minibatch(self):
+        index = np.random.choice(len(self.r) , self.mini_batch_size , replace=False)
+        s = torch.tensor(np.array(self.s)[index], dtype=torch.float)
+        a = torch.tensor(np.array(self.a)[index], dtype=torch.float)
+        r = torch.tensor(np.array(self.r)[index], dtype=torch.float)
+        s_ = torch.tensor(np.array(self.s_)[index], dtype=torch.float)
+        done = torch.tensor(np.array(self.done)[index], dtype=torch.float)
+        return s, a, r, s_, done
 
     def numpy_to_tensor(self):
         s = torch.tensor(np.array(self.s), dtype=torch.float)

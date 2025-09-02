@@ -19,7 +19,7 @@ class Agent():
         self.evaluate_freq_steps = args.evaluate_freq_steps
         self.max_train_steps = args.max_train_steps
         self.num_actions = args.num_actions
-        self.batch_size = args.batch_size
+        self.mini_batch_size = args.mini_batch_size
         self.num_states = args.num_states
         self.mem_min = args.mem_min
         self.gamma = args.gamma
@@ -156,16 +156,17 @@ class Agent():
            
     
     def update(self):
-        s, a, r, s_, done = self.replay_buffer.numpy_to_tensor()  # Get training data .type is tensor    
+        #s, a, r, s_, done = self.replay_buffer.numpy_to_tensor()  # Get training data .type is tensor    
 
-        index = np.random.choice(len(r),self.batch_size,replace=False)
+        #index = np.random.choice(len(r),self.mini_batch_size,replace=False)
 
         # Get minibatch
-        minibatch_s = s[index]
-        minibatch_a = a[index]
-        minibatch_r = r[index]
-        minibatch_s_ = s_[index]
-        minibatch_done = done[index]
+        #minibatch_s = s[index]
+        #minibatch_a = a[index]
+        #minibatch_r = r[index]
+        #minibatch_s_ = s_[index]
+        #minibatch_done = done[index]
+        minibatch_s, minibatch_a, minibatch_r, minibatch_s_, minibatch_done = self.replay_buffer.sample_minibatch() 
         
         # Cliped Double Q
         with torch.no_grad():
@@ -202,7 +203,7 @@ class Agent():
             torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5) # Trick : Clip grad
             self.optimizer_actor.step()
             self.soft_update(self.critic1_target,self.critic1, self.tau)
-            self.soft_update(self.critic2_target,self.critic1, self.tau)
+            self.soft_update(self.critic2_target,self.critic2, self.tau)
             self.soft_update(self.actor_target, self.actor, self.tau)    
 
     def soft_update(self, target, source, tau):

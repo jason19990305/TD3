@@ -106,8 +106,8 @@ class Agent():
         
     def train(self):
         time_start = time.time()
-        episode_reward_list = []
-        episode_count_list = []
+        step_reward_list = []
+        step_count_list = []
         episode_count = 0
         
         # Training Loop
@@ -131,8 +131,8 @@ class Agent():
                 if self.total_steps % self.evaluate_freq_steps == 0:
                     self.evaluate_count += 1
                     evaluate_reward = self.evaluate_policy(self.env)
-                    episode_reward_list.append(evaluate_reward)
-                    episode_count_list.append(episode_count)
+                    step_reward_list.append(evaluate_reward)
+                    step_count_list.append(episode_count)
                     time_end = time.time()
                     h = int((time_end - time_start) // 3600)
                     m = int(((time_end - time_start) % 3600) // 60)
@@ -148,24 +148,14 @@ class Agent():
             
         
         # Plot the training curve
-        plt.plot(episode_count_list, episode_reward_list)
-        plt.xlabel("Episode")
+        plt.plot(step_count_list, step_reward_list)
+        plt.xlabel("Steps")
         plt.ylabel("Reward")
         plt.title("Training Curve")
         plt.show()
            
     
     def update(self):
-        #s, a, r, s_, done = self.replay_buffer.numpy_to_tensor()  # Get training data .type is tensor    
-
-        #index = np.random.choice(len(r),self.mini_batch_size,replace=False)
-
-        # Get minibatch
-        #minibatch_s = s[index]
-        #minibatch_a = a[index]
-        #minibatch_r = r[index]
-        #minibatch_s_ = s_[index]
-        #minibatch_done = done[index]
         minibatch_s, minibatch_a, minibatch_r, minibatch_s_, minibatch_done = self.replay_buffer.sample_minibatch() 
         
         # Cliped Double Q

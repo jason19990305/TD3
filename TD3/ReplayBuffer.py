@@ -7,38 +7,34 @@ import torch
 
 class ReplayBuffer:
     def __init__(self, args):
-        self.max_length = args.buffer_size
+        
         self.mini_batch_size = args.mini_batch_size
-        self.s = deque(maxlen = self.max_length)
-        self.a = deque(maxlen = self.max_length)
-        self.r = deque(maxlen = self.max_length)
-        self.s_ = deque(maxlen = self.max_length)
-        self.dw = deque(maxlen = self.max_length)
-        self.done = deque(maxlen = self.max_length)
-        self.count = 0
+        self.max_length = args.buffer_size
+        self.size = 0       
+        self.ptr = 0 
+        self.s = np.zeros((self.max_length, args.num_states))
+        self.a = np.zeros((self.max_length, args.num_actions))
+        self.r = np.zeros((self.max_length, 1))
+        self.s_ = np.zeros((self.max_length, args.num_states))
+        self.done = np.zeros((self.max_length, 1))
 
     def store(self, s, a, r, s_, done):
-        self.s.append(s)
-        self.a.append(a)
-        self.r.append(r)
-        self.s_.append(s_)
-        self.done.append([done])
-        if self.count <= self.max_length:
-            self.count += 1
+        
+        self.s[self.ptr] = s
+        self.a[self.ptr] = a
+        self.s_[self.ptr] = s_
+        self.r[self.ptr] = r
+        self.done[self.ptr] = done
+
+        self.ptr = (self.ptr + 1) % self.max_length
+        self.size = min(self.size + 1, self.max_length)
+  
     def sample_minibatch(self):
-        index = np.random.choice(len(self.r) , self.mini_batch_size , replace=False)
-        s = torch.tensor(np.array(self.s)[index], dtype=torch.float)
-        a = torch.tensor(np.array(self.a)[index], dtype=torch.float)
-        r = torch.tensor(np.array(self.r)[index], dtype=torch.float)
-        s_ = torch.tensor(np.array(self.s_)[index], dtype=torch.float)
-        done = torch.tensor(np.array(self.done)[index], dtype=torch.float)
+        index = np.random.choice(self.size , self.mini_batch_size , replace=False)
+        s = torch.tensor(self.s[index], dtype=torch.float)
+        a = torch.tensor(self.a[index], dtype=torch.float)
+        r = torch.tensor(self.r[index], dtype=torch.float)
+        s_ = torch.tensor(self.s_[index], dtype=torch.float)
+        done = torch.tensor(self.done[index], dtype=torch.float)
         return s, a, r, s_, done
 
-    def numpy_to_tensor(self):
-        s = torch.tensor(np.array(self.s), dtype=torch.float)
-        a = torch.tensor(np.array(self.a), dtype=torch.float)
-        r = torch.tensor(np.array(self.r), dtype=torch.float)
-        s_ = torch.tensor(np.array(self.s_), dtype=torch.float)
-        done = torch.tensor(np.array(self.done), dtype=torch.float)
-
-        return s, a, r, s_, done

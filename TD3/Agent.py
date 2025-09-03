@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np 
 import torch
 import time
+import copy
 
 # Custom class
 from TD3.ReplayBuffer import ReplayBuffer
@@ -45,9 +46,9 @@ class Agent():
         self.actor = Actor(args,hidden_layer_num_list.copy())
         self.critic1 = Critic(args,hidden_layer_num_list.copy())
         self.critic2 = Critic(args,hidden_layer_num_list.copy())
-        self.actor_target =  Actor(args,hidden_layer_num_list.copy())
-        self.critic1_target =  Critic(args,hidden_layer_num_list.copy())
-        self.critic2_target =  Critic(args,hidden_layer_num_list.copy())
+        self.actor_target = copy.deepcopy(self.actor)
+        self.critic1_target = copy.deepcopy(self.critic1)
+        self.critic2_target = copy.deepcopy(self.critic2)
         self.optimizer_critic1 = torch.optim.Adam(self.critic1.parameters(), lr=self.lr, eps=1e-5)
         self.optimizer_critic2 = torch.optim.Adam(self.critic2.parameters(), lr=self.lr, eps=1e-5)
         self.optimizer_actor = torch.optim.Adam(self.actor.parameters(), lr=self.lr, eps=1e-5)
@@ -108,7 +109,6 @@ class Agent():
         time_start = time.time()
         step_reward_list = []
         step_count_list = []
-        episode_count = 0
         
         # Training Loop
         while self.total_steps < self.max_train_steps:
@@ -124,7 +124,7 @@ class Agent():
                 # update state
                 s = s_
 
-                if self.replay_buffer.count >= self.mem_min:
+                if self.replay_buffer.size >= self.mem_min:
                     self.training_count += 1
                     self.update()
 
@@ -132,14 +132,14 @@ class Agent():
                     self.evaluate_count += 1
                     evaluate_reward = self.evaluate_policy(self.env)
                     step_reward_list.append(evaluate_reward)
-                    step_count_list.append(episode_count)
+                    step_count_list.append(self.total_steps)
                     time_end = time.time()
                     h = int((time_end - time_start) // 3600)
                     m = int(((time_end - time_start) % 3600) // 60)
                     second = int((time_end - time_start) % 60)
                     print("---------")
                     print("Time : %02d:%02d:%02d"%(h,m,second))
-                    print("Training episode : %d\tStep : %d / %d"%(episode_count,self.total_steps,self.max_train_steps))
+                    print("Training \tStep : %d / %d"%(self.total_steps,self.max_train_steps))
                     print("Evaluate count : %d\tEvaluate reward : %0.2f"%(self.evaluate_count,evaluate_reward))
 
                 self.total_steps += 1
@@ -157,6 +157,8 @@ class Agent():
     
     def update(self):
         minibatch_s, minibatch_a, minibatch_r, minibatch_s_, minibatch_done = self.replay_buffer.sample_minibatch() 
+        
+
         
         # Cliped Double Q
         with torch.no_grad():

@@ -166,7 +166,7 @@ class Agent():
         # Cliped Double Q
         with torch.no_grad():
             noise = Normal(0 , self.sigma).sample()
-            next_action = self.actor(minibatch_s) + torch.clamp( noise , -self.c , self.c)
+            next_action = self.actor_target(minibatch_s) + torch.clamp( noise , -self.c , self.c)
             next_value1 = self.critic1_target(minibatch_s_,next_action)
             next_value2 = self.critic2_target(minibatch_s_,next_action)
             target_value =  minibatch_r + self.gamma * torch.min(next_value1 , next_value2) * (1 - minibatch_done)

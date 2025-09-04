@@ -64,8 +64,9 @@ class Agent():
         s = torch.unsqueeze(state,0)
         with torch.no_grad():
             a = self.actor(s)
-            a = Normal(a,self.var).sample()            
-            a = torch.clamp(a,-1,1)
+            if self.total_steps <= 1000:
+                a = Normal(a,self.var).sample()            
+                a = torch.clamp(a,-1,1)
             
         return a.cpu().numpy().flatten() * self.action_max
 
@@ -181,8 +182,7 @@ class Agent():
         self.optimizer_critic2.zero_grad()
         critic2_loss.backward()
         self.optimizer_critic2.step()
-        # Choose action noise (sigma decay)
-        self.var_decay(total_steps=self.total_steps)
+
         
         # Update target networks
         if self.total_steps % self.d == 0 : 

@@ -3,12 +3,13 @@ import gymnasium as gym # openai gym
 import numpy as np 
 import argparse
 from TD3.Agent import Agent
+from gymnasium.wrappers import RecordVideo
 
 
 
 class main():
     def __init__(self,args):
-        env_name = 'Humanoid-v5'
+        env_name = 'HalfCheetah-v5'
         env = gym.make(env_name)
         num_states = env.observation_space.shape[0]
         num_actions = env.action_space.shape[0]
@@ -35,11 +36,9 @@ class main():
         agent.train() 
 
         # evaluate 
-        render_env = gym.make(env_name,render_mode='human')
-        
-        for i in range(10000):
-            evaluate_reward = agent.evaluate_policy(render_env)
-            print(f"Evaluate Episode {i+1}: Average Reward = {evaluate_reward:.2f}")
+        render_env = gym.make(env_name, render_mode="rgb_array")  
+        render_env = RecordVideo(render_env, video_folder = "Video/"+env_name, episode_trigger=lambda x: True)
+        self.agent.evaluate(render_env)
 
 
 if __name__ == '__main__':

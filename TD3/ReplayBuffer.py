@@ -8,6 +8,7 @@ import torch
 class ReplayBuffer:
     def __init__(self, args):
         
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.mini_batch_size = args.mini_batch_size
         self.max_length = args.buffer_size
         self.size = 0       
@@ -31,10 +32,10 @@ class ReplayBuffer:
   
     def sample_minibatch(self):
         index = np.random.choice(self.size , self.mini_batch_size , replace=False)
-        s = torch.tensor(self.s[index], dtype=torch.float)
-        a = torch.tensor(self.a[index], dtype=torch.float)
-        r = torch.tensor(self.r[index], dtype=torch.float)
-        s_ = torch.tensor(self.s_[index], dtype=torch.float)
-        done = torch.tensor(self.done[index], dtype=torch.float)
+        s = torch.tensor(self.s[index], dtype=torch.float).to(self.device)
+        a = torch.tensor(self.a[index], dtype=torch.float).to(self.device)
+        r = torch.tensor(self.r[index], dtype=torch.float).to(self.device)
+        s_ = torch.tensor(self.s_[index], dtype=torch.float).to(self.device)
+        done = torch.tensor(self.done[index], dtype=torch.float).to(self.device)
         return s, a, r, s_, done
 

@@ -9,7 +9,7 @@ from gymnasium.wrappers import RecordVideo
 
 class main():
     def __init__(self,args):
-        env_name = 'Walker2d-v5'
+        env_name = 'Humanoid-v5'
         env = gym.make(env_name)
         num_states = env.observation_space.shape[0]
         num_actions = env.action_space.shape[0]
@@ -38,7 +38,7 @@ class main():
         # evaluate 
         render_env = gym.make(env_name, render_mode="rgb_array")  
         render_env = RecordVideo(render_env, video_folder = "Video/"+env_name, episode_trigger=lambda x: True)
-        self.agent.evaluate(render_env)
+        agent.evaluate_policy(render_env)
 
 
 if __name__ == '__main__':
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     parser.add_argument("--tau", type=float, default=0.005, help="Parameter for soft update")
     parser.add_argument("--gamma", type=float, default=0.99, help="Discount factor")
     parser.add_argument("--sigma", type=float, default=0.2, help="Sigma for target action noise")
-    parser.add_argument("--mem_min", type=float, default=100, help="minimum size of replay memory before updating actor-critic.")
+    parser.add_argument("--mem_min", type=float, default=25e3, help="minimum size of replay memory before updating actor-critic.")
 
     parser.add_argument("--mini_batch_size", type=int, default=256, help="Mini-Batch size")
     parser.add_argument("--buffer_size", type=int, default=int(1e6), help="Learning rate of actor")

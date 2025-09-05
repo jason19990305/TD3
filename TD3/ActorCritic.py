@@ -27,14 +27,15 @@ class Actor(nn.Module):
         # put in ModuleList
         self.layers = nn.ModuleList(layer_list)
         self.tanh = nn.Tanh()
+        self.relu = nn.ReLU()
 
     # when actor(s) will activate the function 
     def forward(self,s):
 
-        for layer in self.layers:
-            s = self.tanh(layer(s))
-            
-        return s * self.action_max
+        for i in range(len(self.layers)-1):
+            s = self.relu(self.layers[i](s))
+        a = self.tanh(self.layers[-1](s))
+        return a * self.action_max
 
 
 class Critic(nn.Module):

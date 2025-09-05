@@ -25,8 +25,7 @@ class Agent():
         self.mem_min = args.mem_min
         self.gamma = args.gamma
         self.sigma = args.sigma
-        self.set_var = args.var
-        self.var = self.set_var
+        self.explore_noise = args.explore_noise
         self.tau = args.tau
         self.lr = args.lr
         self.d = args.d
@@ -66,11 +65,11 @@ class Agent():
         s = torch.unsqueeze(state,0)
         with torch.no_grad():
             a = self.actor(s)
-            if self.total_steps <= 1000:
-                a = Normal(a,self.var).sample()            
-                a = torch.clamp(a,-1,1)
+            if self.total_steps < 1000 :
+                a = Normal(a,self.explore_noise).sample()            
+                a = torch.clamp(a,-self.action_max , self.action_max)
             
-        return a.cpu().numpy().flatten() * self.action_max
+        return a.cpu().numpy().flatten()
 
     def evaluate_action(self,state):
 
@@ -79,7 +78,7 @@ class Agent():
 
         with torch.no_grad():
             a = self.actor(s)     
-        return a.cpu().numpy().flatten() * self.action_max
+        return a.cpu().numpy().flatten() 
 
     def evaluate_policy(self, env , render = False):
         times = 10
@@ -104,9 +103,7 @@ class Agent():
 
         return evaluate_reward / times
 
-    def var_decay(self, total_steps):
-        new_var = self.set_var * (1 - total_steps / self.max_train_steps)
-        self.var = new_var + 10e-10
+        
         
     def train(self):
         time_start = time.time()
@@ -127,8 +124,7 @@ class Agent():
                 # update state
                 s = s_
 
-                if self.replay_buffer.size >= self.mem_min:
-                    self.training_count += 1
+                if (self.replay_buffer.size >= self.mem_min):
                     self.update()
 
                 if self.total_steps % self.evaluate_freq_steps == 0:
@@ -162,11 +158,12 @@ class Agent():
         minibatch_s, minibatch_a, minibatch_r, minibatch_s_, minibatch_done = self.replay_buffer.sample_minibatch() 
         
 
-        
-        # Cliped Double Q
+        # Clipped Double Q-Learning for Actor-Critic
         with torch.no_grad():
-            noise = Normal(0 , self.sigma).sample()
-            next_action = self.actor_target(minibatch_s) + torch.clamp( noise , -self.c , self.c)
+            # Target Policy Smoothing Regularization
+            noise = torch.normal(mean=0, std=self.sigma, size = minibatch_a.shape).to(self.device)
+            next_action = self.actor_target(minibatch_s_) + torch.clamp( noise , -self.c , self.c)
+            next_action = torch.clamp(next_action , -self.action_max , self.action_max)
             next_value1 = self.critic1_target(minibatch_s_,next_action)
             next_value2 = self.critic2_target(minibatch_s_,next_action)
             target_value =  minibatch_r + self.gamma * torch.min(next_value1 , next_value2) * (1 - minibatch_done)
@@ -186,15 +183,14 @@ class Agent():
         self.optimizer_critic2.step()
 
         
-        # Update target networks
-        if self.total_steps % self.d == 0 : 
-            # update Actor
+        # Target Network and Delayed Policy Update
+        if self.total_steps % self.d == 0 :             
+            # Update Actor
             action = self.actor(minibatch_s)
             value = self.critic1(minibatch_s,action)
             actor_loss = -torch.mean(value)
             self.optimizer_actor.zero_grad()
             actor_loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5) # Trick : Clip grad
             self.optimizer_actor.step()
             self.soft_update(self.critic1_target,self.critic1, self.tau)
             self.soft_update(self.critic2_target,self.critic2, self.tau)
@@ -204,5 +200,7 @@ class Agent():
         for target_param, param in zip(target.parameters(), source.parameters()):
             target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
             
+    def var_decay(self):
+        self.explore_noise = self.explore_noise * 0.998
     
         

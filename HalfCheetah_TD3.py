@@ -52,7 +52,7 @@ if __name__ == '__main__':
     parser.add_argument("--explore_noise", type=float, default=0.1, help="Normal noise sigma for choose action")
     parser.add_argument("--mini_batch_size", type=int, default=100, help="Mini-Batch size")
     parser.add_argument("--buffer_size", type=int, default=int(1e6), help="Learning rate of actor")
-    parser.add_argument("--max_train_steps", type=int, default=int(6e3), help=" Maximum number of training steps")
+    parser.add_argument("--max_train_steps", type=int, default=int(2e6), help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq_steps", type=float, default=5e3, help="Evaluate the policy every 'evaluate_freq_steps' steps")
     args = parser.parse_args()
 

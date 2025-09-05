@@ -41,7 +41,8 @@ class Agent():
         self.action_max = env.action_space.high[0]
         self.replay_buffer = ReplayBuffer(args)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print("Device name : ",torch.cuda.get_device_name(self.device))
+        if torch.cuda.is_available():
+            print("Device name : ",torch.cuda.get_device_name(self.device))
 
         # Actor-Critic
         self.actor = Actor(args,hidden_layer_num_list.copy()).to(self.device)

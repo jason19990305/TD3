@@ -31,11 +31,12 @@ class ReplayBuffer:
         self.size = min(self.size + 1, self.max_length)
   
     def sample_minibatch(self):
-        index = np.random.choice(self.size , self.mini_batch_size , replace=False)
+        index = torch.randint(0, self.size, (self.mini_batch_size,))
         s = self.s[index]
         a = self.a[index]
         r = self.r[index]
         s_ = self.s_[index]
         done = self.done[index]
+        
         return s, a, r, s_, done
 

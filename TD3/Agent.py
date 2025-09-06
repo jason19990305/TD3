@@ -38,11 +38,13 @@ class Agent():
 
         # other
         self.env = env
+        self.max_episode_steps = self.env._max_episode_steps
         self.action_max = env.action_space.high[0]
         self.replay_buffer = ReplayBuffer(args)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if torch.cuda.is_available():
             print("Device name : ",torch.cuda.get_device_name(self.device))
+        print("Max episode steps : ",self.env._max_episode_steps)
 
         # Actor-Critic
         self.actor = Actor(args,hidden_layer_num_list.copy()).to(self.device)
@@ -66,7 +68,7 @@ class Agent():
         s = torch.unsqueeze(state,0)
         with torch.no_grad():
             a = self.actor(s)
-            if self.total_steps < 1000 :
+            if self.total_steps < self.max_episode_steps * 10 :
                 a = Normal(a,self.explore_noise).sample()            
                 a = torch.clamp(a,-self.action_max , self.action_max)
             
@@ -97,7 +99,6 @@ class Agent():
                
                 episode_reward += r
                 s = s_
-                #print(episode_reward)
                 if truncted or done:
                     break
             evaluate_reward += episode_reward
@@ -121,11 +122,11 @@ class Agent():
 
 
                 # storage data
-                self.replay_buffer.store(s, a, [r], s_, done)
+                self.replay_buffer.store(s, a, [r], s_, [done])
                 # update state
                 s = s_
 
-                if (self.replay_buffer.size >= self.mem_min):
+                if self.replay_buffer.size >= self.mem_min:
                     self.update()
 
                 if self.total_steps % self.evaluate_freq_steps == 0:
@@ -162,8 +163,11 @@ class Agent():
         # Clipped Double Q-Learning for Actor-Critic
         with torch.no_grad():
             # Target Policy Smoothing Regularization
-            noise = torch.normal(mean=0, std=self.sigma, size = minibatch_a.shape).to(self.device)
-            next_action = self.actor_target(minibatch_s_) + torch.clamp( noise , -self.c , self.c)
+            noise = (
+				torch.randn_like(minibatch_a) * self.sigma
+			).clamp(-self.c, self.c)
+            #noise = torch.normal(mean=0, std=self.sigma, size = minibatch_a.shape).to(self.device)
+            next_action = self.actor_target(minibatch_s_) + noise#torch.clamp( noise , -self.c , self.c)
             next_action = torch.clamp(next_action , -self.action_max , self.action_max)
             next_value1 = self.critic1_target(minibatch_s_,next_action)
             next_value2 = self.critic2_target(minibatch_s_,next_action)
@@ -188,8 +192,7 @@ class Agent():
         if self.total_steps % self.d == 0 :             
             # Update Actor
             action = self.actor(minibatch_s)
-            value = self.critic1(minibatch_s,action)
-            actor_loss = -torch.mean(value)
+            actor_loss = - self.critic1(minibatch_s,action).mean()
             self.optimizer_actor.zero_grad()
             actor_loss.backward()
             self.optimizer_actor.step()

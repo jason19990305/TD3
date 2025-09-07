@@ -43,7 +43,7 @@ class main():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("Hyperparameters Setting for DDPG")
+    parser = argparse.ArgumentParser("Hyperparameters Setting for TD3")
     parser.add_argument("--d", type=int, default=2, help="Update target network every d step")
     parser.add_argument("--c", type=float, default=0.5, help="Clip range for target policy smoothing")
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate of actor")

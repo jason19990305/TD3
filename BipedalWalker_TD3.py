@@ -10,7 +10,7 @@ from gymnasium.wrappers import RecordVideo
 class main():
     def __init__(self,args):
         env_name = 'BipedalWalker-v3'
-        env = gym.make(env_name)
+        env = gym.make(env_name, hardcore=True)
         num_states = env.observation_space.shape[0]
         num_actions = env.action_space.shape[0]
         print(num_actions)
@@ -36,13 +36,14 @@ class main():
         agent.train() 
 
         # evaluate 
-        render_env = gym.make(env_name, render_mode="rgb_array")  
+        render_env = gym.make(env_name, hardcore=True , render_mode="rgb_array")  
         render_env = RecordVideo(render_env, video_folder = "Video/"+env_name, episode_trigger=lambda x: True)
         agent.evaluate_policy(render_env)
+        render_env.close()
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("Hyperparameters Setting for DDPG")
+    parser = argparse.ArgumentParser("Hyperparameters Setting for TD3")
     parser.add_argument("--d", type=int, default=2, help="Update target network every d step")
     parser.add_argument("--c", type=float, default=0.5, help="Clip range for target policy smoothing")
     parser.add_argument("--lr", type=float, default=0.001, help="Learning rate of actor")
@@ -53,7 +54,7 @@ if __name__ == '__main__':
     parser.add_argument("--explore_noise", type=float, default=0.1, help="Normal noise sigma for choose action")
     parser.add_argument("--mini_batch_size", type=int, default=100, help="Mini-Batch size")
     parser.add_argument("--buffer_size", type=int, default=int(1e6), help="Learning rate of actor")
-    parser.add_argument("--max_train_steps", type=int, default=int(6e3), help=" Maximum number of training steps")
+    parser.add_argument("--max_train_steps", type=int, default=int(1e6), help=" Maximum number of training steps")
     parser.add_argument("--evaluate_freq_steps", type=float, default=5e3, help="Evaluate the policy every 'evaluate_freq_steps' steps")
     args = parser.parse_args()
 

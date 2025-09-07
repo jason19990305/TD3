@@ -15,3 +15,10 @@
 - box2d-py 2.3.5
 - pygame 2.6.1
 - numpy 2.2.6
+
+## Result
+
+
+![1757231926018](https://github.com/user-attachments/assets/ad7ab95b-c892-4701-bc5b-fbbe6f2fb5bd)
+
+![1757232143754](https://github.com/user-attachments/assets/3ca5acf7-2dfd-4581-9be7-86d7378b3253)
